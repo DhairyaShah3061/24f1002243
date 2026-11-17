@@ -39,7 +39,7 @@
     const TAG = {
         trek: { Pending: "tag-wait", Approved: "", Open: "tag-go", Closed: "", Ongoing: "tag-live", Completed: "tag-done" },
         booking: { Booked: "", Cancelled: "tag-stop", Completed: "tag-done" },
-        account: { Active: "tag-done", Inactive: "", Blacklisted: "tag-stop" },
+        account: { Active: "tag-done", Blacklisted: "tag-stop" },
     };
 
     // Small components.

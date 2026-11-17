@@ -243,7 +243,7 @@
                             <select id="tf-staff" v-model="form.assigned_staff_id" class="form-select">
                                 <option value="">Not assigned</option>
                                 <option v-if="trek && trek.assigned_staff && !staffOptions.some(s => s.id === trek.assigned_staff.id)"
-                                        :value="trek.assigned_staff.id">{{ trek.assigned_staff.name }} (inactive)</option>
+                                        :value="trek.assigned_staff.id">{{ trek.assigned_staff.name }} (blacklisted)</option>
                                 <option v-for="s in staffOptions" :key="s.id" :value="s.id">{{ s.name }}</option>
                             </select>
                         </div>
@@ -361,7 +361,7 @@
                 form: s ? {
                     name: s.name, phone: s.phone || "", contact: s.contact || "", specialization: s.specialization || "",
                     experience_years: s.experience_years,
-                } : { name: "", email: "", phone: "", contact: "", password: "", confirm_password: "", specialization: "", experience_years: 0, status: "Active" },
+                } : { name: "", email: "", phone: "", contact: "", password: "", confirm_password: "", specialization: "", experience_years: 0 },
                 error: "",
                 busy: false,
             };
@@ -440,10 +440,6 @@
                             <input id="sf-exp" v-model.number="form.experience_years" type="number" min="0" max="60" class="form-control mono" required>
                             <div class="invalid-feedback">0 to 60</div>
                         </div>
-                        <div v-if="!editing" class="col-6 col-md-3">
-                            <label for="sf-status" class="form-label">Account</label>
-                            <select id="sf-status" v-model="form.status" class="form-select"><option>Active</option><option>Inactive</option></select>
-                        </div>
                     </div>
                 </form>
                 <template #footer>
@@ -456,24 +452,19 @@
     };
 
     // Account status actions.
-    async function toggleAccount(vm, row, kind, basePath, label) {
-        const blacklist = kind === "blacklist";
-        const turningOn = blacklist ? !row.is_blacklisted : !row.is_active;
-        const verb = blacklist ? (turningOn ? "Blacklist" : "Whitelist") : (turningOn ? "Activate" : "Deactivate");
-        const consequence = {
-            Blacklist: `${row.name} is logged out at once and can't log in${label === "trekker" ? " or book" : ""} until whitelisted.`,
-            Whitelist: `${row.name} can log in again.`,
-            Deactivate: `${row.name}'s account is switched off and they are logged out at once.`,
-            Activate: `${row.name}'s account is switched back on.`,
-        }[verb];
+    async function toggleAccount(vm, row, basePath, label) {
+        const turningOn = !row.is_blacklisted;
+        const verb = turningOn ? "Blacklist" : "Whitelist";
+        const consequence = turningOn
+            ? `${row.name} is logged out at once and can't log in${label === "trekker" ? " or book" : ""} until whitelisted.`
+            : `${row.name} can log in again.`;
         const yes = await window.store.confirm({
             title: `${verb} ${row.name}?`, message: consequence, confirmText: verb,
-            variant: verb === "Blacklist" || verb === "Deactivate" ? "danger" : "primary",
+            variant: turningOn ? "danger" : "primary",
         });
         if (!yes) return;
         try {
-            const body = blacklist ? { blacklisted: turningOn } : { active: turningOn };
-            const res = await window.api.put(`${basePath}/${row.id}/${blacklist ? "blacklist" : "active"}`, body);
+            const res = await window.api.put(`${basePath}/${row.id}/blacklist`, { blacklisted: turningOn });
             window.store.toast(res.message);
             vm.load();
         } catch (e) {
@@ -489,14 +480,14 @@
             openNew() { this.editing = null; this.showForm = true; },
             openEdit(s) { this.editing = s; this.showForm = true; },
             onSaved(message) { this.showForm = false; window.store.toast(message || "Saved."); this.load(); },
-            toggle(s, kind) { toggleAccount(this, s, kind, "/api/admin/staff", "staff member"); },
+            toggle(s) { toggleAccount(this, s, "/api/admin/staff", "staff member"); },
         },
         template: `
             <div>
                 <page-header title="Trek staff">
                     <button class="btn btn-primary" @click="openNew">Add staff</button>
                 </page-header>
-                <list-filters v-model:q="q" v-model:status="status" :statuses="['Active','Inactive','Blacklisted']" placeholder="Search name, email or phone" @search="search"></list-filters>
+                <list-filters v-model:q="q" v-model:status="status" :statuses="['Active','Blacklisted']" placeholder="Search name, email or phone" @search="search"></list-filters>
 
                 <div v-if="error" class="alert alert-danger">{{ error }}</div>
                 <div class="card">
@@ -515,8 +506,7 @@
                                     <td><status-badge :status="s.status" kind="account"></status-badge></td>
                                     <td class="text-end text-nowrap">
                                         <button class="btn btn-sm btn-quiet" @click="openEdit(s)">Edit</button>
-                                        <button class="btn btn-sm btn-quiet ms-1" @click="toggle(s, 'active')">{{ s.is_active ? 'Deactivate' : 'Activate' }}</button>
-                                        <button class="btn btn-sm ms-1" :class="s.is_blacklisted ? 'btn-quiet' : 'btn-danger-quiet'" @click="toggle(s, 'blacklist')">{{ s.is_blacklisted ? 'Whitelist' : 'Blacklist' }}</button>
+                                        <button class="btn btn-sm ms-1" :class="s.is_blacklisted ? 'btn-quiet' : 'btn-danger-quiet'" @click="toggle(s)">{{ s.is_blacklisted ? 'Whitelist' : 'Blacklist' }}</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -535,12 +525,12 @@
         components: { ListFilters },
         data() { return { endpoint: "/api/admin/users" }; },
         methods: {
-            toggle(u, kind) { toggleAccount(this, u, kind, "/api/admin/users", "trekker"); },
+            toggle(u) { toggleAccount(this, u, "/api/admin/users", "trekker"); },
         },
         template: `
             <div>
                 <page-header title="Trekkers"></page-header>
-                <list-filters v-model:q="q" v-model:status="status" :statuses="['Active','Inactive','Blacklisted']" placeholder="Search name, email or phone" @search="search"></list-filters>
+                <list-filters v-model:q="q" v-model:status="status" :statuses="['Active','Blacklisted']" placeholder="Search name, email or phone" @search="search"></list-filters>
 
                 <div v-if="error" class="alert alert-danger">{{ error }}</div>
                 <div class="card">
@@ -560,8 +550,7 @@
                                     <td class="mono text-body-secondary">{{ $fmt.date(u.created_at) }}</td>
                                     <td><status-badge :status="u.status" kind="account"></status-badge></td>
                                     <td class="text-end text-nowrap">
-                                        <button class="btn btn-sm btn-quiet" @click="toggle(u, 'active')">{{ u.is_active ? 'Deactivate' : 'Activate' }}</button>
-                                        <button class="btn btn-sm ms-1" :class="u.is_blacklisted ? 'btn-quiet' : 'btn-danger-quiet'" @click="toggle(u, 'blacklist')">{{ u.is_blacklisted ? 'Whitelist' : 'Blacklist' }}</button>
+                                        <button class="btn btn-sm" :class="u.is_blacklisted ? 'btn-quiet' : 'btn-danger-quiet'" @click="toggle(u)">{{ u.is_blacklisted ? 'Whitelist' : 'Blacklist' }}</button>
                                     </td>
                                 </tr>
                             </tbody>

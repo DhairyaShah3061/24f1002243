@@ -2,14 +2,11 @@
 (function () {
     const ProfileView = {
         data() {
-            return { profile: null, form: null, password: { current_password: "", new_password: "", confirm_password: "" }, error: "", busy: false };
+            return { profile: null, form: null, error: "", busy: false };
         },
         computed: {
             isStaff() { return this.profile && this.profile.role === "staff"; },
             roleLabel() { return { admin: "Admin", staff: "Trek staff", user: "Trekker" }[this.profile.role]; },
-            mismatch() {
-                return this.password.confirm_password.length > 0 && this.password.new_password !== this.password.confirm_password;
-            },
         },
         async created() {
             try {
@@ -32,8 +29,6 @@
                 };
             },
             async save(event) {
-                const confirm = event.target.querySelector("#pf-confirm");
-                if (confirm) confirm.setCustomValidity(this.mismatch ? "Passwords do not match." : "");
                 if (!event.target.checkValidity()) {
                     event.target.classList.add("was-validated");
                     return;
@@ -41,12 +36,9 @@
                 this.error = "";
                 this.busy = true;
                 try {
-                    const body = { ...this.form };
-                    if (this.password.new_password) Object.assign(body, this.password);
-                    const res = await window.api.put("/api/profile", body);
+                    const res = await window.api.put("/api/profile", { ...this.form });
                     this.load(res.data);
                     window.store.updateUser(res.data);
-                    this.password = { current_password: "", new_password: "", confirm_password: "" };
                     event.target.classList.remove("was-validated");
                     window.store.toast(res.message || "Profile saved.");
                 } catch (e) {
@@ -117,29 +109,6 @@
                                             <div class="invalid-feedback">0 to 60</div>
                                         </div>
                                     </template>
-                                </div>
-
-                                <h2 class="h6 mt-4 mb-1">Change password</h2>
-                                <p class="small text-body-secondary">Leave blank to keep your current password.</p>
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <label for="pf-current" class="form-label">Current password</label>
-                                        <input id="pf-current" v-model="password.current_password" type="password" class="form-control"
-                                               autocomplete="current-password" :required="!!password.new_password">
-                                        <div class="invalid-feedback">Needed to set a new password</div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="pf-new" class="form-label">New password</label>
-                                        <input id="pf-new" v-model="password.new_password" type="password" class="form-control"
-                                               autocomplete="new-password" minlength="6">
-                                        <div class="invalid-feedback">At least 6 characters</div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="pf-confirm" class="form-label">Confirm new password</label>
-                                        <input id="pf-confirm" v-model="password.confirm_password" type="password" class="form-control"
-                                               :class="{ 'is-invalid': mismatch }" autocomplete="new-password">
-                                        <div class="invalid-feedback">Passwords must match</div>
-                                    </div>
                                 </div>
                             </div>
                             <div class="card-footer text-end">

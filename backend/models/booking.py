@@ -1,9 +1,6 @@
 from backend.extensions import db
 from backend.utils import utcnow
 
-BOOKING_STATUSES = ("Booked", "Cancelled", "Completed")
-PAYMENT_STATUSES = ("Pending", "Paid")
-
 
 class Booking(db.Model):
 

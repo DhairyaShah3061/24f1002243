@@ -37,7 +37,7 @@ def _make_token(user, remember_me):
 
 
 def _is_blocked(user):
-    return user.is_blacklisted or not user.is_active
+    return user.is_blacklisted
 
 
 @auth_bp.post("/register")

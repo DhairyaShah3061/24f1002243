@@ -35,9 +35,7 @@ def admin_stats():
         "ongoing_treks": Trek.query.filter(
             Trek.started_at.isnot(None), Trek.status != "Completed"
         ).count(),
-        "blocked_accounts": User.query.filter(
-            (User.is_blacklisted.is_(True)) | (User.is_active.is_(False))
-        ).count(),
+        "blocked_accounts": User.query.filter(User.is_blacklisted.is_(True)).count(),
         "recent_bookings": [booking_to_dict(b) for b in recent],
         "attention": _needs_attention(),
     }

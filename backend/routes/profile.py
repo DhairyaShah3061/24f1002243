@@ -4,7 +4,7 @@ from backend.auth import roles_required
 from backend.cache import invalidate_treks
 from backend.models import db
 from backend.serializers import user_to_dict
-from backend.utils import MIN_PASSWORD_LENGTH, err, is_valid_phone, json_body, ok, parse_int
+from backend.utils import err, is_valid_phone, json_body, ok, parse_int
 
 profile_bp = Blueprint("profile", __name__, url_prefix="/api/profile")
 
@@ -32,15 +32,6 @@ def update_profile():
     if not is_valid_phone(phone):
         return err("Phone number must be 7-15 digits.")
 
-    new_password = data.get("new_password") or ""
-    if new_password:
-        if not user.check_password(data.get("current_password") or ""):
-            return err("Current password is incorrect.", 400)
-        if len(new_password) < MIN_PASSWORD_LENGTH:
-            return err(f"New password must be at least {MIN_PASSWORD_LENGTH} characters.")
-        if new_password != (data.get("confirm_password") or ""):
-            return err("New passwords do not match.")
-
     if user.role == "staff" and user.staff_profile:
         profile = user.staff_profile
         experience = parse_int(data.get("experience_years", profile.experience_years))
@@ -55,8 +46,6 @@ def update_profile():
 
     user.name = name
     user.phone = phone or None
-    if new_password:
-        user.set_password(new_password)
     db.session.commit()
     if user.role == "staff":
         invalidate_treks()  # staff names are shown inside cached trek data

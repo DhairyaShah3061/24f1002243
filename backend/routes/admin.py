@@ -116,20 +116,6 @@ def delete_trek(trek_id):
     return ok(None, "Trek deleted.")
 
 
-@admin_bp.put("/treks/<int:trek_id>/assign")
-def assign_staff(trek_id):
-    trek = _get_trek(trek_id)
-    if not trek:
-        return err("Trek not found.", 404)
-    try:
-        trek_service.assign_staff(trek, json_body().get("staff_id"))
-    except TrekError as e:
-        db.session.rollback()
-        return err(e.message, e.status)
-    invalidate_treks()
-    return ok(trek_to_dict(trek), "Staff assignment saved.")
-
-
 # People helpers.
 
 def _filter_people(q, term, status):
@@ -141,9 +127,7 @@ def _filter_people(q, term, status):
             User.phone.ilike(pattern, escape="\\"),
         ))
     if status == "Active":
-        q = q.filter(User.is_active.is_(True), User.is_blacklisted.is_(False))
-    elif status == "Inactive":
-        q = q.filter(User.is_active.is_(False))
+        q = q.filter(User.is_blacklisted.is_(False))
     elif status == "Blacklisted":
         q = q.filter(User.is_blacklisted.is_(True))
     return q
@@ -172,7 +156,7 @@ def list_staff():
 def staff_options():
     rows = (
         StaffProfile.query.join(User, StaffProfile.user_id == User.id)
-        .filter(User.is_active.is_(True), User.is_blacklisted.is_(False))
+        .filter(User.is_blacklisted.is_(False))
         .order_by(User.name)
         .all()
     )
@@ -230,8 +214,6 @@ def create_staff():
         specialization=fields["specialization"],
         experience_years=fields["experience_years"],
     )
-    if data.get("status") == "Inactive":
-        user.is_active = False
     db.session.add_all([user, profile])
     db.session.commit()
     delete("admin:stats")
@@ -266,18 +248,6 @@ def blacklist_staff(staff_id):
     if failure:
         return failure
     return ok(staff_to_dict(profile), "Staff blacklisted." if flag else "Staff whitelisted.")
-
-
-@admin_bp.put("/staff/<int:staff_id>/active")
-def activate_staff(staff_id):
-    profile = db.session.get(StaffProfile, staff_id)
-    if not profile:
-        return err("Staff member not found.", 404)
-    flag = parse_bool(json_body().get("active", True))
-    failure = _set_flag(profile.user, "is_active", flag)
-    if failure:
-        return failure
-    return ok(staff_to_dict(profile), "Staff activated." if flag else "Staff deactivated.")
 
 
 # Trekkers.
@@ -321,18 +291,6 @@ def blacklist_user(user_id):
     if failure:
         return failure
     return ok(_trekker_to_dict(user), "Trekker blacklisted." if flag else "Trekker whitelisted.")
-
-
-@admin_bp.put("/users/<int:user_id>/active")
-def activate_user(user_id):
-    user = _get_trekker(user_id)
-    if not user:
-        return err("Trekker not found.", 404)
-    flag = parse_bool(json_body().get("active", True))
-    failure = _set_flag(user, "is_active", flag)
-    if failure:
-        return failure
-    return ok(_trekker_to_dict(user), "Trekker activated." if flag else "Trekker deactivated.")
 
 
 # Bookings.

@@ -11,8 +11,6 @@ def iso(value):
 def user_status(user):
     if user.is_blacklisted:
         return "Blacklisted"
-    if not user.is_active:
-        return "Inactive"
     return "Active"
 
 
@@ -23,7 +21,6 @@ def user_to_dict(user):
         "email": user.email,
         "phone": user.phone,
         "role": user.role,
-        "is_active": bool(user.is_active),
         "is_blacklisted": bool(user.is_blacklisted),
         "status": user_status(user),
         "created_at": iso(user.created_at),
@@ -54,7 +51,6 @@ def staff_to_dict(profile):
         "experience_years": profile.experience_years,
         "specialization": profile.specialization,
         "status": profile.status,
-        "is_active": bool(user.is_active),
         "is_blacklisted": bool(user.is_blacklisted),
         "assigned_treks": [{"id": t.id, "name": t.name, "status": t.status} for t in treks],
         "created_at": iso(profile.created_at),

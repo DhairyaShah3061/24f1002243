@@ -31,8 +31,8 @@ def find_assignable_staff(staff_id):
     profile = db.session.get(StaffProfile, staff_id)
     if not profile:
         raise TrekError("Selected staff member does not exist.", 404)
-    if profile.user.is_blacklisted or not profile.user.is_active:
-        raise TrekError("Selected staff member is blacklisted or inactive.", 409)
+    if profile.user.is_blacklisted:
+        raise TrekError("Selected staff member is blacklisted.", 409)
     return profile
 
 
@@ -150,15 +150,3 @@ def delete_trek(trek):
     db.session.commit()
 
 
-def assign_staff(trek, staff_id):
-    if trek.status == "Completed":
-        raise TrekError("Completed treks cannot be reassigned.", 409)
-    if staff_id in (None, "", 0, "0"):
-        trek.assigned_staff_id = None
-    else:
-        staff_id = parse_int(staff_id)
-        if staff_id is None:
-            raise TrekError("staff_id must be a number.")
-        trek.assigned_staff_id = find_assignable_staff(staff_id).id
-    db.session.commit()
-    return trek

@@ -1,4 +1,4 @@
-from flask import Blueprint, g, request
+from flask import Blueprint, g
 
 from backend.auth import roles_required
 from backend.models import Booking, Trek, db
@@ -81,18 +81,6 @@ def update_trek(trek_id):
         db.session.rollback()
         return err(e.message, e.status)
     return ok(trek_to_dict(trek), "Trek updated.")
-
-
-@staff_bp.get("/treks/<int:trek_id>/participants")
-def participants(trek_id):
-    trek, failure = _my_trek(trek_id)
-    if failure:
-        return failure
-    q = trek.bookings
-    status = request.args.get("status", "").strip()
-    if status in ("Booked", "Cancelled", "Completed"):
-        q = q.filter(Booking.status == status)
-    return ok([booking_to_dict(b) for b in q.order_by(Booking.booking_date).all()])
 
 
 @staff_bp.put("/treks/<int:trek_id>/participants/<int:booking_id>/cancel")

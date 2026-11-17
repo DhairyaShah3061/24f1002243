@@ -30,6 +30,4 @@ class StaffProfile(db.Model):
     def status(self):
         if self.user.is_blacklisted:
             return "Blacklisted"
-        if not self.user.is_active:
-            return "Inactive"
         return "Active"

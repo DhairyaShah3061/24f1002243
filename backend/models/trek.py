@@ -1,9 +1,6 @@
 from backend.extensions import db
 from backend.utils import utcnow
 
-DIFFICULTIES = ("Easy", "Moderate", "Hard")
-TREK_STATUSES = ("Pending", "Approved", "Open", "Closed", "Completed")
-
 
 class Trek(db.Model):
 
