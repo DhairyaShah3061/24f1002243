@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1f5f45">
+    <meta name="description" content="Trekking Management Application: plan treks, manage staff and book seats.">
+    <title>Summit Lovers · Trekking Management</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <link rel="icon" href="{{ url_for('static', filename='assets/favicon-64.png') }}" type="image/png" sizes="64x64">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='assets/apple-touch-icon.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+    <!-- The whole UI is the Vue app below. Jinja is used only to serve this file. -->
+    <div id="app"></div>
+    <noscript>Summit Lovers needs JavaScript to run.</noscript>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.4.38/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-router@4.4.3/dist/vue-router.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+    <script src="{{ url_for('static', filename='api.js') }}"></script>
+    <script src="{{ url_for('static', filename='store.js') }}"></script>
+    <script src="{{ url_for('static', filename='components/common.js') }}"></script>
+    <script src="{{ url_for('static', filename='views/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='views/profile.js') }}"></script>
+    <script src="{{ url_for('static', filename='views/admin.js') }}"></script>
+    <script src="{{ url_for('static', filename='views/staff.js') }}"></script>
+    <script src="{{ url_for('static', filename='views/user.js') }}"></script>
+    <script src="{{ url_for('static', filename='router.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>

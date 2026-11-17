@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice">
+  <rect width="400" height="225" fill="#dfe5dc"/>
+  <path d="M0 225 L110 95 L170 160 L230 80 L400 225 Z" fill="#b9c8bc"/>
+  <path d="M0 225 L70 170 L140 210 L260 140 L400 225 Z" fill="#9fb3a4"/>
+  <circle cx="320" cy="60" r="22" fill="#eef1ea"/>
+</svg>
